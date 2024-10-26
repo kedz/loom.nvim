@@ -1,9 +1,11 @@
 local Job = require("plenary.job")
+local Defaults = require("loom.defaults")
+
+local M = {}
 
 local function send_llm(message)
-
 	local message_data = {
-		["model"] = "tinyllama",
+		["model"] = M.config.model,
 		["prompt"] = message,
 		["stream"] = true,
 	}
@@ -14,7 +16,7 @@ local function send_llm(message)
 	Job:new({
 		command = "curl",
 		args = {
-			"http://localhost:11434/api/generate",
+			string.format("http://%s:%s/api/generate", M.config.host, M.config.port),
 			"-d",
 			encoded_data,
 		},
@@ -29,26 +31,22 @@ local function send_llm(message)
 	return resp
 end
 
-vim.api.nvim_create_user_command(
-	"LMCurBuf",
-	function()
-		local bufnr = vim.fn.winbufnr(0)
-		local buflines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-		local prompt = table.concat(buflines, "\n")
-		local result = send_llm(prompt)
+vim.api.nvim_create_user_command("LMCurBuf", function()
+	local bufnr = vim.fn.winbufnr(0)
+	local buflines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local prompt = table.concat(buflines, "\n")
+	local result = send_llm(prompt)
 
-		lines = {}
-		for s in result:gmatch("[^\n]*") do
-			table.insert(lines, s)
-		end
-		vim.cmd("vsplit")
-		local win = vim.api.nvim_get_current_win()
-		local buf = vim.api.nvim_create_buf(true, true)
-		vim.api.nvim_win_set_buf(win, buf)
-		vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
-	end,
-	{}
-)
+	lines = {}
+	for s in result:gmatch("[^\n]*") do
+		table.insert(lines, s)
+	end
+	vim.cmd("vsplit")
+	local win = vim.api.nvim_get_current_win()
+	local buf = vim.api.nvim_create_buf(true, true)
+	vim.api.nvim_win_set_buf(win, buf)
+	vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
+end, {})
 
 vim.api.nvim_create_user_command("LMInput", function(opts)
 	local bufnr = vim.fn.winbufnr(0)
@@ -65,4 +63,15 @@ vim.api.nvim_create_user_command("LMInput", function(opts)
 	vim.api.nvim_win_set_buf(win, buf)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
 end, { nargs = 1 })
-return {} 
+
+vim.api.nvim_create_user_command("LMConfig", function(opts)
+    vim.print(vim.inspect(M.config))
+end, {})
+
+M.setup = function(opts)
+	opts = opts or {}
+	llm_config = opts.config or Defaults:config()
+	M.config = llm_config
+end
+
+return M
