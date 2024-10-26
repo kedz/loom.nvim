@@ -1,4 +1,4 @@
-# loom
+# Loom.nvim
 A hopefully not useless nvim plugin for calling LLMs with buffers.
 
 # Install
@@ -7,7 +7,7 @@ A hopefully not useless nvim plugin for calling LLMs with buffers.
 
 ```lua
 return {
-	"kedz/loom",
+	"kedz/loom.nvim",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 	},
