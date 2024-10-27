@@ -1,77 +1,70 @@
 local Job = require("plenary.job")
 local Defaults = require("loom.defaults")
+local LMRequest = require("loom.lm_request")
+local BufferUtils = require("loom.buffer_utils")
 
 local M = {}
 
-local function send_llm(message)
-	local message_data = {
-		["model"] = M.config.model,
-		["prompt"] = message,
-		["stream"] = true,
-	}
+M.requests = {}
+-- TODO move requests management to separate module.
+-- TODO move buffer listeners to separate module.
 
-	local encoded_data = vim.json.encode(message_data)
-	local resp = ""
+M.attach_request_to_buffer = function(lm_request, buffer)
+	-- TODO allow specifying the line and column number to start writing.
+	-- TODO support streaming.
+	-- TODO delete listener after finish.
+	buffer = buffer or BufferUtils.create_buffer(lm_request.guid)
+	vim.api.nvim_create_autocmd("User", {
+		pattern = "LmRequestComplete",
+		callback = function(opts)
+			if opts.data.guid == lm_request.guid then
+				lines = {}
+				for s in lm_request.response_text:gmatch("[^\n]*") do
+					table.insert(lines, s)
+				end
+				vim.api.nvim_buf_set_lines(buffer, 0, -1, true, lines)
+			end
+		end,
+	})
+end
 
-	Job:new({
-		command = "curl",
-		args = {
-			string.format("http://%s:%s/api/generate", M.config.host, M.config.port),
-			"-d",
-			encoded_data,
-		},
-		on_stdout = function(error, line, job)
-			local data = vim.json.decode(line)
-			resp = resp .. data["response"]
-		end,
-		on_exit = function(job, return_val)
-			vim.print(resp)
-		end,
-	}):sync(10000) -- or start()
-	return resp
+M.lm_current_buffer = function(self)
+	local prompt = BufferUtils.get_buffer_text()
+	self:lm_prompt(prompt)
+end
+
+M.lm_prompt = function(self, prompt)
+	local lr = LMRequest.new(prompt, self.config)
+	local buffer = BufferUtils.create_buffer("scratch-" .. lr.guid)
+	self.attach_request_to_buffer(lr, buffer)
+	lr:start()
+	table.insert(self.requests, lr)
+	-- TODO make this a function in buffer utils.
+	vim.cmd.vsplit()
+	local win = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(win, buffer)
 end
 
 vim.api.nvim_create_user_command("LMCurBuf", function()
-	local bufnr = vim.fn.winbufnr(0)
-	local buflines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-	local prompt = table.concat(buflines, "\n")
-	local result = send_llm(prompt)
-
-	lines = {}
-	for s in result:gmatch("[^\n]*") do
-		table.insert(lines, s)
-	end
-	vim.cmd("vsplit")
-	local win = vim.api.nvim_get_current_win()
-	local buf = vim.api.nvim_create_buf(true, true)
-	vim.api.nvim_win_set_buf(win, buf)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
+	M:lm_current_buffer()
 end, {})
 
 vim.api.nvim_create_user_command("LMInput", function(opts)
-	local bufnr = vim.fn.winbufnr(0)
-	local buflines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-	local prompt = table.concat(buflines, "\n")
-	local result = send_llm(opts["args"])
-	lines = {}
-	for s in result:gmatch("[^\n]*") do
-		table.insert(lines, s)
-	end
-	vim.cmd("vsplit")
-	local win = vim.api.nvim_get_current_win()
-	local buf = vim.api.nvim_create_buf(true, true)
-	vim.api.nvim_win_set_buf(win, buf)
-	vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
+	M:lm_prompt(opts.args)
 end, { nargs = 1 })
 
 vim.api.nvim_create_user_command("LMConfig", function(opts)
-    vim.print(vim.inspect(M.config))
+	vim.print(vim.inspect(M.config))
+end, {})
+
+vim.api.nvim_create_user_command("LMRequests", function(opts)
+	vim.print(vim.inspect(M.requests))
 end, {})
 
 M.setup = function(opts)
 	opts = opts or {}
-	llm_config = opts.config or Defaults:config()
-	M.config = llm_config
+	lm_config = opts.config or Defaults:config()
+	M.config = lm_config
 end
 
 return M
