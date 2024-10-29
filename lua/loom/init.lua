@@ -14,16 +14,39 @@ M.attach_request_to_buffer = function(lm_request, buffer)
 	-- TODO support streaming.
 	-- TODO delete listener after finish.
 	buffer = buffer or BufferUtils.create_buffer(lm_request.guid)
+	local row = 0
+	local col = 0
+	local index = 1
 	vim.api.nvim_create_autocmd("User", {
-		pattern = "LmRequestComplete",
+		pattern = "LmRequestUpdate",
 		callback = function(opts)
-			if opts.data.guid == lm_request.guid then
-				lines = {}
-				for s in lm_request.response_text:gmatch("[^\n]*") do
-					table.insert(lines, s)
-				end
-				vim.api.nvim_buf_set_lines(buffer, 0, -1, true, lines)
+            -- TODO make a separate module to handle this logic
+            -- TODO fix the algo
+            -- TODO figure out whether to keep the old one.
+			--			if opts.data.guid == lm_request.guid then
+			--				lines = {}
+			--				for s in lm_request.response_text:gmatch("[^\n]*") do
+			--					table.insert(lines, s)
+			--				end
+			--				vim.api.nvim_buf_set_lines(buffer, 0, -1, true, lines)
+			--			end
+			--
+			if opts.data.guid ~= lm_request.guid then
+				return
 			end
+            local win = vim.api.nvim_get_current_win()
+			local next_text = lm_request.response_texts[index]:gsub("\n", " ")
+			index = index + 1
+			local line = vim.api.nvim_buf_get_lines(buffer, row, row + 1, false)[1]
+			if #line + #next_text > 80 then 
+                row = row + 1 
+                col = 0
+	            line = "" --vim.api.nvim_buf_get_lines(buffer, row, row + 1, false)[1]
+            end
+            local new_line = line:sub(0, col) .. next_text .. line:sub(col + 1)
+			col = col + next_text:len()
+			vim.api.nvim_buf_set_lines(buffer, row, row + 1, false, { new_line })
+            
 		end,
 	})
 end
