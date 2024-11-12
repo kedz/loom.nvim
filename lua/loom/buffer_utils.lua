@@ -10,9 +10,25 @@ M.create_buffer = function(name)
 end
 
 M.get_buffer_text = function(buffer_number)
-	buffer_number = buffer_number or vim.fn.winbufnr(0)
+	local buffer_number = buffer_number or vim.fn.winbufnr(0)
 	local lines = vim.api.nvim_buf_get_lines(buffer_number, 0, -1, false)
 	return table.concat(lines, "\n")
+end
+
+M.insert_buffer_lines = function(buffer_number, line, col, replacement_lines)
+	local lines = vim.api.nvim_buf_get_lines(buffer_number, 0, -1, false)
+	local line_to_insert = lines[line]
+	local repl_lines = M.str_insert_lines(line_to_insert, col, replacement_lines)
+end
+
+
+
+M.open_buffer_in_window = function(buffer)
+	-- TODO Add options to control how this is opened.
+    vim.cmd.vsplit()
+	local window = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(window, buffer)
+
 end
 
 return M

@@ -10,6 +10,7 @@ return {
 	"kedz/loom.nvim",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
+        -- TODO add dep.
 	},
 	lazy = false,
 	config = function()
