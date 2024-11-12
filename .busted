@@ -1,0 +1,12 @@
+return {
+    _all = {
+        lua = "./test/nvim-shim.sh"
+    },
+    unit = {
+        ROOT = {"./test/unit/"},
+    },
+    integration = {
+        ROOT = {"./test/integration/"},
+    },
+    
+}
