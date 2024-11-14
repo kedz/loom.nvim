@@ -1,12 +1,9 @@
-local Job = require("plenary.job")
 local Defaults = require("loom.defaults")
 local LMRequest = require("loom.lm_request")
-local BufferUtils = require("loom.buffer_utils")
 local StreamingBufferWriter = require("loom.streaming_buffer_writer")
 local Util = require("loom.util")
 
 local M = {}
-
 M.requests = {}
 -- TODO move requests management to separate module.
 -- TODO move buffer listeners to separate module.
@@ -36,8 +33,8 @@ M.attach_request_to_buffer = function(lm_request, buffer)
 	-- TODO allow specifying the line and column number to start writing.
 	-- TODO support streaming.
 	-- TODO delete listener after finish.
-    -- TODO(kedz) determine if this should create a buffer if passed an empty one?
-    -- like so (but this will break on 0): buffer = buffer or BufferUtils.create_buffer(lm_request.guid)
+	-- TODO(kedz) determine if this should create a buffer if passed an empty one?
+	-- like so (but this will break on 0): buffer = buffer or BufferUtils.create_buffer(lm_request.guid)
 	local row = 0
 	local col = 0
 	local index = 1
@@ -54,7 +51,7 @@ M.attach_request_to_buffer = function(lm_request, buffer)
 end
 
 M.lm_current_buffer = function(self)
-	local prompt = BufferUtils.get_buffer_text()
+	local prompt = Util.buffer.get_text()
 	self:lm_prompt_to_buffer(prompt)
 end
 
@@ -66,11 +63,11 @@ M.lm_prompt_to_buffer = function(self, prompt, opts)
 		end
 	end
 	local lr = LMRequest.new(prompt, config)
-	local buffer = BufferUtils.create_buffer("scratch-" .. lr.guid)
+	local buffer = Util.buffer.new({ name = "scratch-" .. lr.guid })
 	self.attach_request_to_buffer(lr, buffer)
 	lr:start()
 	table.insert(self.requests, lr)
-	BufferUtils.open_buffer_in_window(buffer)
+	Util.buffer.open_buffer_in_window(buffer)
 end
 
 vim.api.nvim_create_user_command("LMCurBuf", function()
@@ -91,7 +88,7 @@ end, {})
 
 M.setup = function(opts)
 	opts = opts or {}
-	lm_config = opts.config or Defaults:config()
+	local lm_config = opts.config or Defaults:config()
 	M.config = lm_config
 end
 
