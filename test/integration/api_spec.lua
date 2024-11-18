@@ -25,7 +25,7 @@ describe("loom.nvim api", function()
 	end)
 
 	it("lm_prompt_to_buffer", function()
-		local response_strings = vim.rpcrequest(
+		vim.rpcrequest(
 			nvim,
 			"nvim_exec_lua",
 			string.format(
@@ -42,12 +42,12 @@ describe("loom.nvim api", function()
 			{}
 		)
 		local buffer_text =
-			vim.rpcrequest(nvim, "nvim_exec_lua", 'return require("loom.buffer_utils").get_buffer_text()', {})
+			vim.rpcrequest(nvim, "nvim_exec_lua", 'return require("loom.util").buffer.get_text()', {})
 		assert.is.equal("resp1resp2resp3", buffer_text)
 	end)
 
 	it("lm_prompt_to_buffer (no streaming)", function()
-		local response_strings = vim.rpcrequest(
+		vim.rpcrequest(
 			nvim,
 			"nvim_exec_lua",
 			string.format(
@@ -65,12 +65,12 @@ describe("loom.nvim api", function()
 		)
 
 		local buffer_text =
-			vim.rpcrequest(nvim, "nvim_exec_lua", 'return require("loom.buffer_utils").get_buffer_text()', {})
+			vim.rpcrequest(nvim, "nvim_exec_lua", 'return require("loom.util").buffer.get_text()', {})
 		assert.is.equal("resp1resp2resp3", buffer_text)
 	end)
 
 	it("lm_prompt_to_buffer with newlines", function()
-		local response_strings = vim.rpcrequest(
+	    vim.rpcrequest(
 			nvim,
 			"nvim_exec_lua",
 			string.format(
@@ -87,7 +87,7 @@ describe("loom.nvim api", function()
 			{}
 		)
 		local buffer_text =
-			vim.rpcrequest(nvim, "nvim_exec_lua", 'return require("loom.buffer_utils").get_buffer_text()', {})
+			vim.rpcrequest(nvim, "nvim_exec_lua", 'return require("loom.util").buffer.get_text()', {})
 		assert.is.equal("foo\nbar\nbazbiz\n", buffer_text)
 	end)
 end)
