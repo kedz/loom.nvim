@@ -1,10 +1,11 @@
 local Defaults = require("loom.defaults")
 local LMRequest = require("loom.lm_request")
-local StreamingBufferWriter = require("loom.streaming_buffer_writer")
+local BufferWriter = require("loom.buffer_writer")
 local Util = require("loom.util")
 
 local M = {}
 M.requests = {}
+
 -- TODO move requests management to separate module.
 -- TODO move buffer listeners to separate module.
 -- TODO(kedz) separate opts into server data to send vs and config about host location/route.
@@ -38,16 +39,7 @@ M.attach_request_to_buffer = function(lm_request, buffer)
 	local row = 0
 	local col = 0
 	local index = 1
-	local sbw = StreamingBufferWriter.new(buffer, lm_request, {})
-	vim.api.nvim_create_autocmd("User", {
-		pattern = "LmRequestUpdate",
-		callback = function(opts)
-			if opts.data.guid ~= lm_request.guid then
-				return
-			end
-			sbw:next_write()
-		end,
-	})
+	BufferWriter.new(buffer, lm_request, {})
 end
 
 M.lm_current_buffer = function(self)
@@ -84,6 +76,10 @@ end, {})
 
 vim.api.nvim_create_user_command("LMRequests", function(opts)
 	vim.print(vim.inspect(M.requests))
+end, {})
+
+vim.api.nvim_create_user_command("LMWriters", function(opts)
+	vim.print(vim.inspect(BufferWriter.registry.active_listeners))
 end, {})
 
 M.setup = function(opts)
