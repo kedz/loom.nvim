@@ -1,10 +1,10 @@
-M = {}
+local Defaults = {}
 
 -- Ollama default configuration.
-M.HOST = "localhost"
-M.PORT = "11434"
-M.MODEL = "tinyllama"
-M.config = function(self)
+Defaults.HOST = "localhost"
+Defaults.PORT = "11434"
+Defaults.MODEL = "tinyllama"
+Defaults.config = function(self)
 	return {
 		["host"] = self.HOST,
 		["port"] = self.PORT,
@@ -12,4 +12,4 @@ M.config = function(self)
 	}
 end
 
-return M
+return Defaults

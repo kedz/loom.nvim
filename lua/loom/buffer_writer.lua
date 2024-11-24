@@ -27,7 +27,7 @@ local BufferWriter = {}
 
 BufferWriter.registry = BufferWriterRegistry
 
-BufferWriter.new = function(buffer, lm_request, opts)
+BufferWriter.new = function(buffer, lm_request)
 	local obj = {}
 	obj.buffer = buffer
 	obj.lm_request = lm_request

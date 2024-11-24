@@ -1,7 +1,7 @@
 local Job = require("plenary.job")
 local Uuid = require("uuid-nvim")
 
-M = {}
+local M = {}
 
 function M.new(prompt, config)
 	local obj = {}
@@ -38,17 +38,17 @@ function M.new(prompt, config)
 			"-d",
 			encoded_data,
 		},
-		on_stdout = function(error, line, job)
+		on_stdout = function(_, line, _) -- error, line, job
 			local data = vim.json.decode(line)
 			table.insert(obj.response_strings, data["response"])
 			vim.schedule(function()
 				vim.api.nvim_exec_autocmds("User", { pattern = "LmRequestUpdate", data = { guid = obj.guid } })
 			end)
 		end,
-        on_stderr = function(error, data, iob)
-            -- TODO(kedz): Added error handling.
-        end,
-		on_exit = function(job, return_val)
+--        on_stderr = function(_, data, _) -- error, line, job
+--            -- TODO(kedz): Added error handling.
+--        end,
+		on_exit = function(_, _) -- job, return_val
 			vim.schedule(function()
 				obj.is_finished = true
 				obj.finish_time = vim.fn.strftime("%Y-%m-%dT%H:%M:%S")
