@@ -40,4 +40,5 @@ luac.out
 *.hex
 
 # Neovim testing state directories
-test/xdg/local
+test/xdg/local/share/nvim/lazy/
+test/xdg/local/state/
