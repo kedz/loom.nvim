@@ -1,12 +1,12 @@
-M = {}
+local M = {}
 
 M.str_split_lines = function(str)
 	local lines = {}
-	local i, j = string.find(str, "\n", 1, true)
+	local i, _ = string.find(str, "\n", 1, true)
 	while i do
 		table.insert(lines, str:sub(1, i - 1))
 		str = str:sub(i + 1)
-		i, j = string.find(str, "\n", 1, true)
+		i, _ = string.find(str, "\n", 1, true)
 	end
 
 	--if #str > 0 then

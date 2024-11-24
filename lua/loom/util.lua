@@ -85,8 +85,8 @@ function Util.buffer.insert_text(buffer, line, col, replacement_text)
 	local orig_line = lines[line + 1]
 	local prefix = orig_line:sub(1, col)
 	local suffix = orig_line:sub(col + 1)
-	local end_line = nil
-	local end_column = nil
+	local end_line
+	local end_column
 	if #replacement_lines == 1 then
 		lines[line + 1] = prefix .. replacement_lines[1] .. suffix
 		vim.api.nvim_buf_set_lines(buffer, 0, -1, true, lines)
@@ -106,12 +106,6 @@ function Util.buffer.insert_text(buffer, line, col, replacement_text)
 	-- TODO test validation if col is beyond buffer cols
 	--
 	return { line = end_line, column = end_column, replacement_line = orig_line, prefix = prefix, suffix = suffix }
-end
-
-function Util.buffer.insert_buffer_lines(buffer_number, line, col, replacement_lines)
-	local lines = vim.api.nvim_buf_get_lines(buffer_number, 0, -1, true)
-	local line_to_insert = lines[line]
-	local repl_lines = M.str_insert_lines(line_to_insert, col, replacement_lines)
 end
 
 -- TODO(kedz): Add tests.
