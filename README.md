@@ -1,6 +1,12 @@
 # Loom.nvim
 A hopefully not useless nvim plugin for calling LLMs with buffers.
 
+
+# TODOs
+
+- [ ] Finalize .luacheckrc
+
+
 # Install
 
 ## lazy.nvim
@@ -36,4 +42,13 @@ vim.keymap.set("n", "<leader>li", function()
 		args = { prompt },
 	})
 end, { desc = "Send user input to language model" })
+```
+
+
+# Running tests
+
+Make sure to run this first:
+
+```bash
+eval $(luarocks path --lua-version 5.1 --bin)
 ```
